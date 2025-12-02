@@ -1,10 +1,9 @@
 import { writable } from "svelte/store";
 import { browser } from "$app/environment";
 
-// SHA-256 hash of the family password
-// To generate: echo -n "your_password" | shasum -a 256
-const PASSWORD_HASH =
-  "cb585eb2853f46cc1abecb47545cf6c9f8d156d658d46b675df5272c2cfc63c5";
+// The family password (obfuscated in base64 - not secure, but keeps casual viewers out)
+// To change: btoa("your_password") in browser console
+const PASSWORD_B64 = "QW15J3MgZmF2b3VyaXRlIGNoZWVzZSBpcyBnb2F0";
 
 const STORAGE_KEY = "family_auth";
 
@@ -15,10 +14,9 @@ function createAuthStore() {
 
   return {
     subscribe,
-    login: async (password: string): Promise<boolean> => {
-      const hash = await hashPassword(password);
-      console.log(password, "Computed hash:", hash);
-      if (hash === PASSWORD_HASH) {
+    login: (password: string): boolean => {
+      // Simple comparison (base64 encoded for minimal obfuscation)
+      if (btoa(password) === PASSWORD_B64) {
         if (browser) {
           localStorage.setItem(STORAGE_KEY, "true");
         }
@@ -42,14 +40,6 @@ function createAuthStore() {
       return false;
     },
   };
-}
-
-async function hashPassword(password: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export const auth = createAuthStore();

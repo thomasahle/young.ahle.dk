@@ -1,1 +1,4 @@
+# Check if package-lock.json is in sync
+npm ls > /dev/null 2>&1 || { echo "Error: package-lock.json out of sync. Run 'npm install' first."; exit 1; }
+
 npx lint-staged

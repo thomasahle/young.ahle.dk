@@ -19,6 +19,32 @@
   let activeTab = $state(familyMembers[0].sheetName);
   let wishlists = $state<Record<string, WishItem[]>>({});
   let loading = $state(true);
+  let linkPreviews = $state<Record<string, string | null>>({});
+
+  async function fetchLinkPreview(url: string): Promise<string | null> {
+    try {
+      const response = await fetch(
+        `https://api.microlink.io?url=${encodeURIComponent(url)}`,
+      );
+      const data = await response.json();
+      return data.data?.image?.url || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchAllLinkPreviews(items: WishItem[]) {
+    const linksToFetch = items.filter(
+      (item) => item.link && !linkPreviews[item.link],
+    );
+
+    await Promise.all(
+      linksToFetch.map(async (item) => {
+        const imageUrl = await fetchLinkPreview(item.link);
+        linkPreviews[item.link] = imageUrl;
+      }),
+    );
+  }
 
   function setActiveTab(tab: string) {
     activeTab = tab;
@@ -44,6 +70,10 @@
 
     wishlists = Object.fromEntries(results.map((r) => [r.name, r.items]));
     loading = false;
+
+    // Fetch link previews for all items with links
+    const allItems = results.flatMap((r) => r.items);
+    fetchAllLinkPreviews(allItems);
   });
 
   function getPriorityColor(priority: string): string {
@@ -110,48 +140,79 @@
     {:else}
       <div class="grid gap-4">
         {#each items as wish}
-          <Card class={wish.claimed ? "opacity-60" : ""}>
-            <CardHeader class="pb-2">
-              <div class="flex justify-between items-start gap-4">
-                <div class="flex-1">
-                  <CardTitle class="text-lg flex items-center gap-2">
-                    {wish.item}
-                    {#if wish.claimed}
-                      <span
-                        class="text-sm font-normal bg-green-100 text-green-800 px-2 py-0.5 rounded"
-                      >
-                        Reserveret
-                      </span>
-                    {/if}
-                  </CardTitle>
-                  {#if wish.description}
-                    <CardDescription class="mt-1"
-                      >{wish.description}</CardDescription
-                    >
-                  {/if}
-                </div>
-                <span
-                  class="text-xs font-medium px-2 py-1 rounded {getPriorityColor(
-                    wish.priority,
-                  )}"
-                >
-                  {getPriorityLabel(wish.priority)}
-                </span>
+          {@const imageUrl = wish.link && linkPreviews[wish.link]}
+          <Card class="{wish.claimed ? 'opacity-60' : ''} overflow-hidden">
+            <div class="flex">
+              <div
+                class="w-24 sm:w-28 flex-shrink-0 bg-muted/50 flex items-center justify-center"
+              >
+                {#if imageUrl}
+                  <img
+                    src={imageUrl}
+                    alt={wish.item}
+                    class="w-full h-full object-cover"
+                  />
+                {:else}
+                  <svg
+                    class="w-10 h-10 text-muted-foreground/40"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="1.5"
+                      d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
+                    ></path>
+                  </svg>
+                {/if}
               </div>
-            </CardHeader>
-            {#if wish.link}
-              <CardContent class="pt-2">
-                <Button
-                  href={wish.link}
-                  variant="outline"
-                  size="sm"
-                  target="_blank"
-                  rel="noopener"
-                >
-                  Se link →
-                </Button>
-              </CardContent>
-            {/if}
+              <div class="flex-1 flex flex-col justify-center min-w-0">
+                <CardHeader class="py-3">
+                  <div class="flex justify-between items-start gap-2">
+                    <div class="flex-1 min-w-0">
+                      <CardTitle
+                        class="text-base sm:text-lg flex items-center gap-2 flex-wrap"
+                      >
+                        <span class="truncate">{wish.item}</span>
+                        {#if wish.claimed}
+                          <span
+                            class="text-xs font-normal bg-green-100 text-green-800 px-2 py-0.5 rounded whitespace-nowrap"
+                          >
+                            Reserveret
+                          </span>
+                        {/if}
+                      </CardTitle>
+                      {#if wish.description}
+                        <CardDescription class="mt-1 line-clamp-2"
+                          >{wish.description}</CardDescription
+                        >
+                      {/if}
+                    </div>
+                    <span
+                      class="text-xs font-medium px-2 py-1 rounded flex-shrink-0 {getPriorityColor(
+                        wish.priority,
+                      )}"
+                    >
+                      {getPriorityLabel(wish.priority)}
+                    </span>
+                  </div>
+                  {#if wish.link}
+                    <Button
+                      href={wish.link}
+                      variant="outline"
+                      size="sm"
+                      target="_blank"
+                      rel="noopener"
+                      class="mt-2 w-fit"
+                    >
+                      Se link →
+                    </Button>
+                  {/if}
+                </CardHeader>
+              </div>
+            </div>
           </Card>
         {/each}
       </div>

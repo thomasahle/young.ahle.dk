@@ -23,11 +23,11 @@
     isLoading = false;
   });
 
-  async function handleLogin(e: Event) {
+  function handleLogin(e: Event) {
     e.preventDefault();
     error = "";
 
-    const success = await auth.login(password);
+    const success = auth.login(password);
     if (success) {
       isAuthenticated = true;
     } else {

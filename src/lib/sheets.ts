@@ -1,3 +1,5 @@
+import * as XLSX from "xlsx";
+
 // Google Sheets configuration
 const SHEET_ID = "1OAibq3yhlwZrIQnAyszGLfj173Zqxa_3yAUM0TcWVW4";
 export const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`;
@@ -21,41 +23,82 @@ export const familyMembers: FamilyMember[] = [
   { name: "Baby", sheetName: "Baby" },
 ];
 
+// Cache the workbook to avoid re-fetching for each sheet
+let workbookCache: XLSX.WorkBook | null = null;
+
+async function getWorkbook(): Promise<XLSX.WorkBook> {
+  if (workbookCache) return workbookCache;
+
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=xlsx`;
+  const response = await fetch(url);
+  const arrayBuffer = await response.arrayBuffer();
+  workbookCache = XLSX.read(arrayBuffer, { type: "array" });
+  return workbookCache;
+}
+
+function getCellHyperlink(
+  sheet: XLSX.WorkSheet,
+  cellAddress: string,
+): string | null {
+  const cell = sheet[cellAddress];
+  if (!cell) return null;
+
+  // Check for hyperlink in cell
+  if (cell.l?.Target) {
+    return cell.l.Target;
+  }
+
+  // Return cell value if it looks like a URL
+  const value = cell.v?.toString() || "";
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    return value;
+  }
+
+  return null;
+}
+
 export async function fetchWishlist(sheetName: string): Promise<WishItem[]> {
   if (SHEET_ID === "YOUR_GOOGLE_SHEET_ID") {
-    // Return sample data if sheet is not configured
     return getSampleData(sheetName);
   }
 
   try {
-    // Google Sheets JSON export URL
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-    const response = await fetch(url);
-    const text = await response.text();
+    const workbook = await getWorkbook();
+    const sheet = workbook.Sheets[sheetName];
 
-    // Parse Google's JSON response (it's wrapped in a function call)
-    const jsonString = text.match(
-      /google\.visualization\.Query\.setResponse\(([\s\S]*)\);/,
-    )?.[1];
-    if (!jsonString) {
-      console.error("Failed to parse Google Sheets response");
+    if (!sheet) {
+      console.error(`Sheet "${sheetName}" not found`);
       return [];
     }
 
-    const data = JSON.parse(jsonString);
-    const rows = data.table.rows;
+    const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+    const items: WishItem[] = [];
 
-    // Skip header row, parse data
-    return rows
-      .slice(1)
-      .map((row: { c: Array<{ v: string } | null> }) => ({
-        item: row.c[0]?.v || "",
-        description: row.c[1]?.v || "",
-        link: row.c[2]?.v || "",
-        priority: row.c[3]?.v || "medium",
-        claimed: (row.c[4]?.v || "").toString().toLowerCase() === "yes",
-      }))
-      .filter((item: WishItem) => item.item); // Filter out empty rows
+    // Start from row 2 (skip header)
+    for (let row = 1; row <= range.e.r; row++) {
+      const itemCell = sheet[XLSX.utils.encode_cell({ r: row, c: 0 })];
+      const item = itemCell?.v?.toString().trim() || "";
+
+      if (!item) continue; // Skip empty rows
+
+      const descCell = sheet[XLSX.utils.encode_cell({ r: row, c: 1 })];
+      const priorityCell = sheet[XLSX.utils.encode_cell({ r: row, c: 3 })];
+      const claimedCell = sheet[XLSX.utils.encode_cell({ r: row, c: 4 })];
+
+      // Get hyperlink from link column (column C, index 2)
+      const linkAddress = XLSX.utils.encode_cell({ r: row, c: 2 });
+      const link = getCellHyperlink(sheet, linkAddress) || "";
+
+      items.push({
+        item,
+        description: descCell?.v?.toString().trim() || "",
+        link,
+        priority: priorityCell?.v?.toString().trim() || "medium",
+        claimed: claimedCell?.v?.toString().toLowerCase().trim() === "yes",
+      });
+    }
+
+    return items;
   } catch (error) {
     console.error("Error fetching wishlist:", error);
     return [];
