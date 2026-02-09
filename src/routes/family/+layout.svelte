@@ -103,6 +103,13 @@
           >
             🎁 Ønskelister
           </Button>
+          <Button
+            href="/family/philip"
+            variant="ghost"
+            class="text-white hover:bg-white/20 hover:text-white"
+          >
+            👶 Philip
+          </Button>
         </div>
         <Button
           onclick={handleLogout}

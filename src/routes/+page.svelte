@@ -65,7 +65,7 @@
     Velkommen til Young Ahle
   </h1>
   <p class="text-lg text-white/80 mb-8 text-center max-w-md">
-    Amy, Thomas & Baby
+    Amy, Thomas & Philip
   </p>
 
   <!-- Enter Button -->

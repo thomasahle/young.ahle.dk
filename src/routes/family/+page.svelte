@@ -44,11 +44,10 @@
       external: true,
     },
     {
-      title: "Baby Tracker",
-      description: "Babys milepæle og vækst",
-      href: "#",
+      title: "Philip Tracker",
+      description: "Philips milepæle og vækst",
+      href: "/family/philip",
       icon: "👶",
-      external: true,
     },
   ];
 </script>

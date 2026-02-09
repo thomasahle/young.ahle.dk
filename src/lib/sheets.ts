@@ -20,7 +20,7 @@ export interface FamilyMember {
 export const familyMembers: FamilyMember[] = [
   { name: "Amy", sheetName: "Amy" },
   { name: "Thomas", sheetName: "Thomas" },
-  { name: "Baby", sheetName: "Baby" },
+  { name: "Philip", sheetName: "Philip" },
 ];
 
 // Cache the workbook to avoid re-fetching for each sheet
@@ -139,7 +139,7 @@ function getSampleData(sheetName: string): WishItem[] {
         claimed: false,
       },
     ],
-    Baby: [
+    Philip: [
       {
         item: "LEGO Duplo",
         description: "Alle sæt er gode",
