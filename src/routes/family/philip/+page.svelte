@@ -9,7 +9,8 @@
   } from "$lib/components/ui/card";
 
   const birthStats = {
-    date: "2025",
+    date: "18. januar 2026",
+    time: "02:30",
     weight: "3.667 g",
     height: "54 cm",
   };
@@ -77,7 +78,15 @@
       <CardDescription>Philips første tal</CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="grid grid-cols-3 gap-4 text-center">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="rounded-lg bg-secondary/50 p-4">
+          <div class="text-2xl font-bold text-primary">{birthStats.date}</div>
+          <div class="text-sm text-muted-foreground mt-1">Fødselsdag</div>
+        </div>
+        <div class="rounded-lg bg-secondary/50 p-4">
+          <div class="text-2xl font-bold text-primary">{birthStats.time}</div>
+          <div class="text-sm text-muted-foreground mt-1">Tidspunkt</div>
+        </div>
         <div class="rounded-lg bg-secondary/50 p-4">
           <div class="text-2xl font-bold text-primary">{birthStats.weight}</div>
           <div class="text-sm text-muted-foreground mt-1">Fødselsvægt</div>
@@ -85,10 +94,6 @@
         <div class="rounded-lg bg-secondary/50 p-4">
           <div class="text-2xl font-bold text-primary">{birthStats.height}</div>
           <div class="text-sm text-muted-foreground mt-1">Længde</div>
-        </div>
-        <div class="rounded-lg bg-secondary/50 p-4">
-          <div class="text-2xl font-bold text-primary">{birthStats.date}</div>
-          <div class="text-sm text-muted-foreground mt-1">Fødselsår</div>
         </div>
       </div>
     </CardContent>

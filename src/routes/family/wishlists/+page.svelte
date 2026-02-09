@@ -185,7 +185,7 @@
                         {/if}
                       </CardTitle>
                       {#if wish.description}
-                        <CardDescription class="mt-1 line-clamp-2"
+                        <CardDescription class="mt-1"
                           >{wish.description}</CardDescription
                         >
                       {/if}
