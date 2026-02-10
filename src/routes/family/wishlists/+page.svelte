@@ -190,13 +190,15 @@
                         >
                       {/if}
                     </div>
-                    <span
-                      class="text-xs font-medium px-2 py-1 rounded flex-shrink-0 {getPriorityColor(
-                        wish.priority,
-                      )}"
-                    >
-                      {getPriorityLabel(wish.priority)}
-                    </span>
+                    {#if wish.priority}
+                      <span
+                        class="text-xs font-medium px-2 py-1 rounded flex-shrink-0 {getPriorityColor(
+                          wish.priority,
+                        )}"
+                      >
+                        {getPriorityLabel(wish.priority)}
+                      </span>
+                    {/if}
                   </div>
                   {#if wish.link}
                     <Button
